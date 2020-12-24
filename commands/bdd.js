@@ -1,17 +1,16 @@
 const chance = require('chance').Chance();
 const chalk = require('chalk');
+const {MongoClient} = require('mongodb');
 const {prompt} = require('inquirer');
-const mongoose = require('mongoose');
 const {hash} = require('bcrypt');
 
 module.exports = async function () {
     try {
-        await mongoose.connect(process.env.DB_URL, {
+        const m = await MongoClient.connect(process.env.DB_URL, {
             useNewUrlParser: true,
-            useUnifiedTopology: true,
-            useCreateIndex: true,
-            useFindAndModify: false,
+            useUnifiedTopology: true
         });
+        (await m.db('streetcoin').listCollections({}).toArray()).map(c => c.name);
 
         const aswr = await prompt([
             {
@@ -24,7 +23,7 @@ module.exports = async function () {
                 type: 'list',
                 name: 'collection',
                 message: chalk`{cyan Which collection would you like to use ?}`,
-                choices: ['users', 'sessions']
+                choices: (await m.db('streetcoin').listCollections({}).toArray()).map(c => c.name)
             },
             {
                 type: 'confirm',
@@ -35,8 +34,6 @@ module.exports = async function () {
                 }
             }
         ]);
-
-        const col = mongoose.connection.collection(aswr.collection);
 
         if (aswr.collection === 'users') {
             const fields = [
@@ -51,25 +48,33 @@ module.exports = async function () {
 
             const newPrompt = fields.map(function (prompt) {
                 const p = {
-                    message: chalk`{cyan Add a value for ${prompt.value} field.`,
+                    message: chalk`{cyan Add a value for ${prompt.value} field.}`,
                     name: prompt.value
                 }
-            
+                
                 if (prompt.type === Boolean) {
                     p.type = 'confirm';
                 } else {
                     p.type = 'input';
                 }
-
+                
+                if (prompt.value === 'password') {
+                    p.filter = async function (v) {
+                        return await hash(v, 10);
+                    }
+                }
+                
                 return p;
             });
+            
+            const userData = await prompt(newPrompt);
+            const collection = m.db('streetcoin').collection(aswr.collection);
 
-            console.log(newPrompt);
-            await prompt(newPrompt);
+            await collection.insertOne({ ...userData });
         }
 
-        await co.close();
+        await m.close();
     } catch (error) {
-        
+        throw error;
     }
 };
