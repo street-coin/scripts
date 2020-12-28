@@ -32,10 +32,20 @@ module.exports = async function () {
                     if (instance.action === 'add') return true;
                     return false;
                 }
+            },
+            {
+                type: 'number',
+                name: 'amount',
+                when(instance) {
+                    if (instance.random) return true;
+                    return false;
+                }
             }
         ]);
 
         if (aswr.collection === 'users') {
+            const collection = m.db('streetcoin').collection(aswr.collection);
+
             const fields = [
                 { value: 'name', type: String },
                 { value: 'familyname', type: String },
@@ -44,7 +54,13 @@ module.exports = async function () {
                 { value: 'admin', type: Boolean }
             ];
 
-            if (aswr.random) {} // Use chance package.
+            if (aswr.random) {
+                const newData = [];
+
+                console.log(chance.address({short_suffix: true}));
+                return true;
+                return collection.insertMany();
+            }
 
             const newPrompt = fields.map(function (prompt) {
                 const p = {
@@ -68,8 +84,6 @@ module.exports = async function () {
             });
             
             const userData = await prompt(newPrompt);
-            const collection = m.db('streetcoin').collection(aswr.collection);
-
             await collection.insertOne({ ...userData });
         }
 
