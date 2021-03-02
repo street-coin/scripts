@@ -3,6 +3,8 @@ const { prompt } = require('inquirer');
 const { promises } = require("fs");
 
 const initCrud = require('../../utils/initcrud');
+const connecBdd = require('../../utils/connectBdd');
+const mongooseActions = require('./crudActions');
 
 module.exports = async function () {
     console.log(chalk`
@@ -34,10 +36,29 @@ module.exports = async function () {
                     if (a.action === 'add') return true;
                     return false;
                 }
+            },
+            {
+                type: 'number',
+                message: chalk`{cyan How many datas would you like to manipulate ?}`,
+                name: 'items',
+                when(a) {
+                    if (a.action === 'add' || a.action === 'delete') return true;
+                    return false;
+                }
             }
         ]);
 
-        return initCrud(aswr);
+        await initCrud(aswr);
+        await connecBdd();
+
+        switch (aswr.service) {
+            case 'association':
+                await mongooseActions.Assos(aswr);
+            default:
+                break;
+        }
+
+        await promises.rmdir(`${process.cwd()}/tmp`, { recursive: true });
         return process.exit(0);
     }
 
