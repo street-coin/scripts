@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "main": "cli.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "populate": "node cli.js"
   },
   "license": "MIT",
   "devDependencies": {
@@ -16,8 +16,6 @@
     "meow": "^8.0.0"
   },
   "dependencies": {
-    "axios": "^0.21.1",
-    "mongodb": "^3.6.3",
     "mongoose": "^5.11.18"
   }
 }
