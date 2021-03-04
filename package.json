@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "main": "cli.js",
   "scripts": {
-    "populate": "node cli.js"
+    "start": "node cli.js --trace-warnings"
   },
   "license": "MIT",
   "devDependencies": {
