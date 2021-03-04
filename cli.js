@@ -6,6 +6,7 @@ const { prompt } = require('inquirer');
 const { promises } = require('fs');
 
 const bdd = require('./commands/bdd/index');
+const models = require('./commands/models/index');
 
 (async function () {
     try {
@@ -23,7 +24,9 @@ const bdd = require('./commands/bdd/index');
 
         switch (aswr.service) {
             case 'bdd':
-                return await bdd();
+                await bdd();
+            case 'models':
+                return await models();
             default:
                 break;
         }
