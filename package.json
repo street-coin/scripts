@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "main": "cli.js",
   "scripts": {
-    "start": "node cli.js --trace-warnings"
+    "bdd": "node ./commands/bdd/index.js --trace-warnings",
+    "models": "node ./commands/models/index.js --trace-warnings"
   },
   "license": "MIT",
   "devDependencies": {
@@ -16,6 +17,7 @@
     "meow": "^8.0.0"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "mongoose": "^5.11.18"
   }
 }
