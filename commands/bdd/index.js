@@ -1,11 +1,14 @@
+#!/usr/bin/env node
+require('dotenv').config();
 const chalk = require('chalk');
+const mongoose = require('mongoose');
 const { prompt } = require('inquirer');
 const { promises } = require("fs");
 
-const initCrud = require('../../utils/initcrud');
 const mongooseActions = require('./crudActions');
 
 module.exports = async function () {
+    process.stdout.write('SDJGDFKGJ');
     if ((await promises.readdir(`${process.cwd()}/commands/models/schemas`)).length) {
         console.log(chalk`
         {cyan Welcome on the bdd services, here you can add, edit, delete datas you want.}
@@ -19,7 +22,7 @@ module.exports = async function () {
                 {
                     type: 'list',
                     message: chalk`{cyan In which collections would you like to handle datas.}`,
-                    name: 'service',
+                    name: 'collection',
                     choices: [...services]
                 },
                 {
@@ -31,7 +34,7 @@ module.exports = async function () {
                 {
                     type: 'confirm',
                     message: chalk`{cyan Would you like to add real datas ?}`,
-                    name: 'fakeData',
+                    name: 'realDatas',
                     when(a) {
                         if (a.action === 'add') return true;
                         return false;
@@ -48,14 +51,30 @@ module.exports = async function () {
                 }
             ]);
 
-            await initCrud(aswr);
+            if (!mongoose.connection.readyState === 1) {
+                try {
+                    await mongoose.connect(process.env.DB_URL, {
+                        useNewUrlParser: true,
+                        useUnifiedTopology: true,
+                        useCreateIndex: true,
+                        useFindAndModify: false,
+                    });
+                } catch (error) {
+                    throw process.exit(-1);
+                }
+            }
 
-            switch (aswr.service) {
+            switch (aswr.collection) {
                 case 'association':
-                    return await mongooseActions.Assos(aswr);
+                    await mongooseActions.Assos(aswr);
+                case 'contacts':
+                    await mongooseActions.Contacts(aswr);
                 default:
                     break;
             }
+
+            await mongoose.connection.close();
+            process.exit(0);
         }
 
         console.error(chalk`{bgRed Crud folder must only contains files}`);
