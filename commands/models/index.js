@@ -17,7 +17,7 @@ async function populateSchemas() {
     process.exit(0);
 }
 
-module.exports = async function () {
+module.exports = (async function () {
     if (!(await promises.readdir(`${__dirname}/schemas`)).length) {
         return await populateSchemas();
     }
@@ -33,4 +33,4 @@ module.exports = async function () {
     if (awsr.fetch) {
         return await populateSchemas();
     }
-};
+})();
