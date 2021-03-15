@@ -7,8 +7,7 @@ const { promises } = require("fs");
 
 const mongooseActions = require('./crudActions');
 
-module.exports = async function () {
-    process.stdout.write('SDJGDFKGJ');
+module.exports = (async function () {
     if ((await promises.readdir(`${process.cwd()}/commands/models/schemas`)).length) {
         console.log(chalk`
         {cyan Welcome on the bdd services, here you can add, edit, delete datas you want.}
@@ -51,7 +50,7 @@ module.exports = async function () {
                 }
             ]);
 
-            if (!mongoose.connection.readyState === 1) {
+            if (mongoose.connection.readyState === 0) {
                 try {
                     await mongoose.connect(process.env.DB_URL, {
                         useNewUrlParser: true,
@@ -83,4 +82,4 @@ module.exports = async function () {
 
     console.error(chalk`{bgRed You must add models before creating datas, choose the 'models' service.}`);
     return process.exit(-1);
-};
+})();
