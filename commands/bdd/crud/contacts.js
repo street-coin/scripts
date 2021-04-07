@@ -10,8 +10,7 @@ const ContactsSchemas = require('mongoose').model('Contacts').schema.obj;
 async function add(userData) {
     const arrayOfDocs = [];
     const arrayPrompt = [];
-    const assosData = await AssosModel.find({}, 'name').lean().map(assos => console.log(assos));
-    // console.log(assosData);
+    const assosData = await AssosModel.find({}, 'name').lean();
 
     for (let index = 0; index < userData.items; index++) {
         const newDoc = {};
@@ -26,6 +25,14 @@ async function add(userData) {
                         type: 'list',
                         message,
                         name: `${schemaKey}-${index}`,
+                        choices() {
+                            return assosData.map(assos => {
+                                return {
+                                    name: assos.name,
+                                    value: assos._id
+                                }
+                            })
+                        },
                         filter(value) {
                             arrayPrompt[index][schemaKey] = value;
                             return value;
@@ -33,7 +40,7 @@ async function add(userData) {
                     });
                 }
 
-                return newDoc[schemaKey] = mongoose.Types.ObjectId();
+                return newDoc[schemaKey] = assosData[Math.round(Math.random()  * assosData.length)]._id
             }
 
             if (ContactsSchemas[schemaKey].type === String && schemaKey === 'name') {
@@ -89,7 +96,7 @@ async function add(userData) {
     try {
         await ContactsModel.insertMany(userData.realDatas ? arrayPrompt : arrayOfDocs);
         process.stdout.write(chalk`
-        {bgGreen Add ${arrayOfDocs.length} documents in ${userData.collection}}`);
+        {bgGreen Add ${userData.realDatas ? arrayPrompt.length : arrayOfDocs.length} documents in ${userData.collection}}`);
     } catch (error) {
         throw error;
     }
