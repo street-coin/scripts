@@ -1,4 +1,6 @@
 const {Schema, model, Types} = require('mongoose');
+const mongoose = require("mongoose");
+const deepPopulate = require('mongoose-deep-populate')(mongoose);
 
 const AssoSchema = new Schema(
     {
@@ -14,9 +16,13 @@ const AssoSchema = new Schema(
             max: 5
         },
         contacts: {
-            type: [Types.ObjectId],
+            type: [
+                {
+                    type: Types.ObjectId,
+                    ref: 'Contacts'
+                }
+            ],
             required: true,
-            ref: 'Contacts'
         },
         email: {
             type: String,
@@ -28,8 +34,6 @@ const AssoSchema = new Schema(
     { timestamps: false }
 );
 
-AssoSchema.post('find', function (doc) {
-    console.log(doc);
-})
+AssoSchema.plugin(deepPopulate);
 
 module.exports = model('Association', AssoSchema);

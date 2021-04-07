@@ -1,4 +1,6 @@
 const {Schema, model, Types} = require('mongoose');
+const mongoose = require("mongoose");
+const deepPopulate = require('mongoose-deep-populate')(mongoose);
 
 const ContactSchema = new Schema(
     {
@@ -18,5 +20,7 @@ const ContactSchema = new Schema(
     },
     { timestamps: false }
 );
+
+ContactSchema.plugin(deepPopulate);
 
 module.exports = model('Contacts', ContactSchema);
