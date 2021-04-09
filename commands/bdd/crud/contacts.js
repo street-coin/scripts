@@ -9,94 +9,80 @@ const ContactsSchemas = require('mongoose').model('Contacts').schema.obj;
 
 async function add(userData) {
     const arrayOfDocs = [];
-    const arrayPrompt = [];
     const assosData = await AssosModel.find({}, 'name').lean();
 
     for (let index = 0; index < userData.items; index++) {
         const newDoc = {};
-        arrayPrompt[index] = {};
 
         Object.keys(ContactsSchemas).forEach(function (schemaKey) {
-            const message = `Document n°${index} ajoutez le champ ${schemaKey}`;
-
             if (ContactsSchemas[schemaKey].type === mongoose.Types.ObjectId) {
-                if (userData.realDatas) {
-                    return arrayOfDocs.push({
-                        type: 'list',
-                        message,
-                        name: `${schemaKey}-${index}`,
-                        choices() {
-                            return assosData.map(assos => {
-                                return {
-                                    name: assos.name,
-                                    value: assos._id
-                                }
-                            })
-                        },
-                        filter(value) {
-                            arrayPrompt[index][schemaKey] = value;
-                            return value;
-                        }
-                    });
-                }
-
-                return newDoc[schemaKey] = assosData[Math.round(Math.random()  * assosData.length)]._id
+                return newDoc[schemaKey] = assosData[Math.floor(Math.random()  * assosData.length)]._id
             }
 
             if (ContactsSchemas[schemaKey].type === String && schemaKey === 'name') {
-                if (userData.realDatas) {
-                    return arrayOfDocs.push({
-                        type: 'input',
-                        name: `${schemaKey}-${index}`,
-                        message,
-                        validate: function (value) {
-                            if (typeof value === 'string') return true;
-                            return false;
-                        },
-                        filter(value) {
-                            arrayPrompt[index][schemaKey] = value;
-                            return value;
-                        }
-                    });
-                }
-
                 return newDoc[schemaKey] = chance.name().split(' ')[0];
             }
 
             if (ContactsSchemas[schemaKey].type === String && schemaKey === 'familyname') {
-                if (userData.realDatas) {
-                    return arrayOfDocs.push({
-                        type: 'input',
-                        name: `${schemaKey}-${index}`,
-                        message,
-                        validate: function (a) {
-                            if (typeof a === 'string') return true;
-                            return false;
-                        },
-                        filter(value) {
-                            arrayPrompt[index][schemaKey] = value;
-                            return value;
-                        }
-                    });
-                }
-
                 return newDoc[schemaKey] = chance.name().split(' ')[1];
             }
         });
 
-        if (!userData.realDatas) {
-            arrayOfDocs.push(newDoc);
-        }
+        arrayOfDocs.push(newDoc);
     }
-
-    if (userData.realDatas) {
-        await prompt(arrayOfDocs);
-    }
-
     try {
-        await ContactsModel.insertMany(userData.realDatas ? arrayPrompt : arrayOfDocs);
+        await Promise.all(arrayOfDocs.map(async function (newDoc) {
+            return await new ContactsModel(newDoc).save();
+        }));
         process.stdout.write(chalk`
         {bgGreen Add ${userData.realDatas ? arrayPrompt.length : arrayOfDocs.length} documents in ${userData.collection}}`);
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function deleteData() {
+    try {
+        const contactsId = await ContactsModel.find({}, '_id name familyname').lean();
+
+        const aswr = await prompt([
+            {
+                type: "confirm",
+                message: "Would you like to delete all datas ?",
+                name: 'deleteAll'
+            },
+            {
+                type: 'checkbox',
+                message: 'Select contacts to delete',
+                name: 'contacts',
+                choices() {
+                    return contactsId.map(contact => ({
+                        name: `${contact.name} ${contact.familyname}`,
+                        value: contact._id
+                    }))
+                },
+                when(a) {
+                    if (a.deleteAll) return false;
+                    return true;
+                }
+            }
+        ]);
+
+        if (aswr.deleteAll) {
+            await ContactsModel.deleteMany();
+            return process.stdout.write(chalk`
+            {bgGreen Delete all contacts data}
+            `);
+        }
+
+        await ContactsModel.deleteMany(
+            {
+                _id: { $in: aswr.contacts}
+            }
+        );
+        return process.stdout.write(chalk`
+        {bgGreen Delete ${aswr.contacts.length} contacts}
+        `);
     } catch (error) {
         throw error;
     }
@@ -106,6 +92,8 @@ module.exports = async function (userData) {
     switch (userData.action) {
         case 'add':
             return await add(userData);
+        case 'delete':
+            return await deleteData();
         default:
             break;
     }
