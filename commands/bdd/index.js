@@ -31,20 +31,11 @@ module.exports = (async function () {
                     choices: ['add', 'delete', 'update']
                 },
                 {
-                    type: 'confirm',
-                    message: chalk`{cyan Would you like to add real datas ?}`,
-                    name: 'realDatas',
-                    when(a) {
-                        if (a.action === 'add') return true;
-                        return false;
-                    }
-                },
-                {
                     type: 'number',
                     message: chalk`{cyan How many datas would you like to manipulate ?}`,
                     name: 'items',
                     when(a) {
-                        if (a.action === 'add' || a.action === 'delete') return true;
+                        if (a.action === 'add' || a.action === 'update') return true;
                         return false;
                     }
                 }
