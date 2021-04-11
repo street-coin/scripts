@@ -8,67 +8,61 @@ const { promises } = require("fs");
 const mongooseActions = require('./crudActions');
 
 module.exports = (async function () {
+    console.log(mongooseActions);
     if ((await promises.readdir(`${process.cwd()}/commands/models/schemas`)).length) {
         console.log(chalk`
         {cyan Welcome on the bdd services, here you can add, edit, delete datas you want.}
         `);
 
-        const crudServices = await promises.readdir(`${__dirname}/crud`, { withFileTypes: true });
+        const aswr = await prompt([
+            {
+                type: 'list',
+                message: chalk`{cyan In which collections would you like to handle datas.}`,
+                name: 'collection',
+                choices: Object.keys(mongooseActions)
+            },
+            {
+                type: 'list',
+                name: 'action',
+                message: chalk`{cyan What would you like to do ?}`,
+                choices(a) {
+                    const serviceActions = Object.keys(mongooseActions[a.collection]);
 
-        if (crudServices.every(file => file.isFile())) {
-            const services = crudServices.map(file => file.name.split('.')[0]);
-            const aswr = await prompt([
-                {
-                    type: 'list',
-                    message: chalk`{cyan In which collections would you like to handle datas.}`,
-                    name: 'collection',
-                    choices: [...services]
-                },
-                {
-                    type: 'list',
-                    name: 'action',
-                    message: chalk`{cyan What would you like to do ?}`,
-                    choices: ['add', 'delete', 'update']
-                },
-                {
-                    type: 'number',
-                    message: chalk`{cyan How many datas would you like to manipulate ?}`,
-                    name: 'items',
-                    when(a) {
-                        if (a.action === 'add' || a.action === 'update') return true;
-                        return false;
-                    }
+                    if (serviceActions.length) {
+                        return Object.keys(mongooseActions[a.collection])
+                    };
+                    
+                    process.stdout.write(chalk`
+                    {bgRed ${a.collection} service Doesn't contain any actions for the moment come back later.}`);
+                    process.exit(-1);
                 }
-            ]);
-
-            if (mongoose.connection.readyState === 0) {
-                try {
-                    await mongoose.connect(process.env.DB_URL, {
-                        useNewUrlParser: true,
-                        useUnifiedTopology: true,
-                        useCreateIndex: true,
-                        useFindAndModify: false,
-                    });
-                } catch (error) {
-                    throw process.exit(-1);
+            },
+            {
+                type: 'number',
+                message: chalk`{cyan How many datas would you like to manipulate ?}`,
+                name: 'items',
+                when(a) {
+                    if (a.action === 'add' || a.action === 'update') return true;
+                    return false;
                 }
             }
+        ]);
 
-            switch (aswr.collection) {
-                case 'association':
-                    await mongooseActions.Assos(aswr);
-                case 'contacts':
-                    await mongooseActions.Contacts(aswr);
-                default:
-                    break;
+        if (mongoose.connection.readyState === 0) {
+            try {
+                await mongoose.connect(process.env.DB_URL, {
+                    useNewUrlParser: true,
+                    useUnifiedTopology: true,
+                    useCreateIndex: true,
+                    useFindAndModify: false,
+                });
+                await mongooseActions[aswr.collection][aswr.action](aswr)
+                await mongoose.connection.close();
+                process.exit(0);
+            } catch (error) {
+                throw process.exit(-1);
             }
-
-            await mongoose.connection.close();
-            process.exit(0);
         }
-
-        console.error(chalk`{bgRed Crud folder must only contains files}`);
-        return process.exit(-1);
     }
 
     console.error(chalk`{bgRed You must add models before creating datas, choose the 'models' service.}`);
