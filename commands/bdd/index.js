@@ -8,7 +8,6 @@ const { promises } = require("fs");
 const mongooseActions = require('./crudActions');
 
 module.exports = (async function () {
-    console.log(mongooseActions);
     if ((await promises.readdir(`${process.cwd()}/commands/models/schemas`)).length) {
         console.log(chalk`
         {cyan Welcome on the bdd services, here you can add, edit, delete datas you want.}
