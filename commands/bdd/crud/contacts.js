@@ -7,7 +7,7 @@ const AssosModel = require('../../models/schemas/association');
 const ContactsModel = require("../../models/schemas/contacts");
 const ContactsSchemas = require('mongoose').model('Contacts').schema.obj;
 
-async function add(userData) {
+exports.add = async function(userData) {
     const arrayOfDocs = [];
     const assosData = await AssosModel.find({}, 'name').lean();
 
@@ -41,7 +41,7 @@ async function add(userData) {
     }
 }
 
-async function deleteData() {
+exports.delete = async function() {
     try {
         const contactsId = await ContactsModel.find({}, '_id name familyname').lean();
 
@@ -87,14 +87,3 @@ async function deleteData() {
         throw error;
     }
 }
-
-module.exports = async function (userData) {
-    switch (userData.action) {
-        case 'add':
-            return await add(userData);
-        case 'delete':
-            return await deleteData();
-        default:
-            break;
-    }
-};
