@@ -5,10 +5,12 @@ const mongoose = require('mongoose');
 const { prompt } = require('inquirer');
 const { promises } = require("fs");
 
-const mongooseActions = require('./crudActions');
-
 module.exports = (async function () {
-    if ((await promises.readdir(`${process.cwd()}/commands/models/schemas`)).length) {
+    try {
+        const SchemasPath = `${process.cwd()}/commands/models/schemas`;
+        await promises.readdir(SchemasPath).length;
+        const mongooseActions = require('./crudActions');
+
         console.log(chalk`
         {cyan Welcome on the bdd services, here you can add, edit, delete datas you want.}
         `);
@@ -30,7 +32,7 @@ module.exports = (async function () {
                     if (serviceActions.length) {
                         return Object.keys(mongooseActions[a.collection])
                     };
-                    
+
                     process.stdout.write(chalk`
                     {bgRed ${a.collection} service Doesn't contain any actions for the moment come back later.}`);
                     process.exit(-1);
@@ -57,13 +59,16 @@ module.exports = (async function () {
                 });
                 await mongooseActions[aswr.collection][aswr.action](aswr)
                 await mongoose.connection.close();
+                await promises.rmdir(SchemasPath, { recursive: true });
                 process.exit(0);
             } catch (error) {
                 throw process.exit(-1);
             }
         }
+    } catch (error) {
+        process.stderr.write(chalk`
+        {bgRed You must add models before creating datas, choose the 'models' service.}
+        `);
+        process.exit(-1);
     }
-
-    console.error(chalk`{bgRed You must add models before creating datas, choose the 'models' service.}`);
-    return process.exit(-1);
 })();
