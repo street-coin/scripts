@@ -3,13 +3,12 @@ const chance = require('chance').Chance();
 const { prompt } = require('inquirer');
 const chalk = require('chalk');
 
-const AssosModel = require('../../models/schemas/association');
-const ContactsModel = require("../../models/schemas/contacts");
+const { Asso, Contact} = require('../../models/schemas/index');
 const ContactsSchemas = require('mongoose').model('Contacts').schema.obj;
 
 exports.add = async function(userData) {
     const arrayOfDocs = [];
-    const assosData = await AssosModel.find({}, 'name').lean();
+    const assosData = await Asso.find({}, 'name').lean();
 
     for (let index = 0; index < userData.items; index++) {
         const newDoc = {};
@@ -32,7 +31,7 @@ exports.add = async function(userData) {
     }
     try {
         await Promise.all(arrayOfDocs.map(async function (newDoc) {
-            return await new ContactsModel(newDoc).save();
+            return await new Contact(newDoc).save();
         }));
         process.stdout.write(chalk`
         {bgGreen Add ${userData.realDatas ? arrayPrompt.length : arrayOfDocs.length} documents in ${userData.collection}}`);
@@ -43,7 +42,7 @@ exports.add = async function(userData) {
 
 exports.delete = async function() {
     try {
-        const contactsId = await ContactsModel.find({}, '_id name familyname').lean();
+        const contactsId = await Contact.find({}, '_id name familyname').lean();
 
         const aswr = await prompt([
             {
@@ -69,13 +68,13 @@ exports.delete = async function() {
         ]);
 
         if (aswr.deleteAll) {
-            await ContactsModel.deleteMany();
+            await Contact.deleteMany();
             return process.stdout.write(chalk`
             {bgGreen Delete all contacts data}
             `);
         }
 
-        await ContactsModel.deleteMany(
+        await Contact.deleteMany(
             {
                 _id: { $in: aswr.contacts}
             }
