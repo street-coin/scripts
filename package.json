@@ -9,16 +9,16 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "bcrypt": "^5.0.0",
-    "chalk": "^4.1.0",
+    "bcrypt": "^5.0.1",
+    "chalk": "^4.1.1",
     "chance": "^1.1.7",
     "dotenv": "^8.2.0",
     "inquirer": "^7.3.3",
-    "meow": "^8.0.0"
+    "meow": "^8.1.2"
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "mongoose": "^5.11.15",
+    "mongoose": "^5.12.5",
     "mongoose-deep-populate": "^3.2.0"
   }
 }
